@@ -10,7 +10,7 @@
       </div>
       <div class="g-form-line">
         <div class="g-form-btn">
-          <a class="button" @click="onLogin">登录</a>
+          <a class="button" @click="onLogin">注册</a>
         </div>
       </div>
     </div>
@@ -24,7 +24,28 @@ export default {
   },
   data () {
     return {
-      
+      formData: [
+        {
+          label: '用户名',
+          placeholder: '请输入用户名',
+          model: ''
+        },
+        {
+          label: '手机号',
+          placeholder: '请输入手机号',
+          model: ''
+        },
+        {
+          label: '密码',
+          placeholder: '请输入密码',
+          model: ''
+        },
+        {
+          label: '确认密码',
+          placeholder: '请确认密码',
+          model: ''
+        }
+      ]
     }
   },
   computed: {
@@ -60,6 +81,9 @@ export default {
     }
   },
   methods: {
+    onLogin() {
+      
+    },
     closeMyself () {
       this.$emit('on-close')
     }

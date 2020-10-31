@@ -65,5 +65,16 @@ module.exports = {
     // `npm run build --report`
     // Set to `true` or `false` to always turn it on or off
     bundleAnalyzerReport: process.env.npm_config_report
-  }
+  },
+  devServer: {
+    proxy: {
+        '/api':{
+            target:'http://47.101.206.36:9000',
+            changeOrigin:true,
+            pathRewrite:{
+                '/api':''
+            }
+        }
+    }
+}
 }

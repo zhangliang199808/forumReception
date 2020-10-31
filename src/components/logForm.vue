@@ -29,6 +29,7 @@
 </template>
 
 <script>
+import {getLogin} from '@/api/login.js'
 export default {
   data () {
     return {
@@ -40,21 +41,15 @@ export default {
   computed: {
     userErrors () {
       let errorText, status
-      if (!/jj/g.test(this.usernameModel)) {
-        status = false
-        errorText = '没有jj'
-      }
-      else {
+      if (this.usernameModel == '') {
+        errorText = '请填写用户名'
+      } else {
         status = true
         errorText = ''
       }
-      if (!this.userFlag) {
-        errorText = ''
-        this.userFlag = true
-      }
       return {
-        status,
-        errorText
+        errorText,
+        status
       }
     },
     passwordErrors () {
@@ -79,21 +74,24 @@ export default {
   },
   methods: {
     onLogin () {
-        if(!this.userErrors.status|| !this.passwordErrors.status){
-            this.errorText='请认真查看要求再注册！'
-        }
-        else{
-            this.errorText=''
-            this.$http.get('api/login').then((res) => {
-                this.$emit('has-log',res.data)
-            },(error) => {
+      let data = new FormData()
+      data.append('username',this.usernameModel)
+      data.append('password',this.passwordModel)
+      getLogin(data)
+        .then(res => {
+          if (res.code == 200) {
+            this.$emit('has-log',res.data)
+            localStorage.setItem('token',res.token)
+            let userInfo = {username:res.username}
+            localStorage.setItem('userInfo',JSON.stringify(userInfo))
+          }
+        })
+        .catch(err => {
 
-            })
-        }
-      console.log(this.usernameModel)
-      console.log(this.passwordModel)
+        })
+      
+    }  
   }
-}
 }
 </script>
 
