@@ -83,7 +83,7 @@ export default {
           } else {
             this.msg = res.message
             this.msgShow = true
-            this.msgType = 'wraning'
+            this.msgType = 'danger'
           }
         })
         .catch(err => {
