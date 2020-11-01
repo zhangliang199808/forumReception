@@ -25,3 +25,19 @@ export function apiDetail(data) {
     params: data
   })
 }
+// 图片上传
+export function apiImgUpload(data) {
+  return request({
+    url: '/upload/file/',
+    method: 'POST',
+    data
+  })
+}
+// 发布文章
+export function addArtice(data) {
+  return request({
+    url: '/add/article/',
+    method: 'POST',
+    data
+  })
+}

@@ -1,139 +1,131 @@
 <template>
-  <div class="blog-container">
-    <div class="blog-pages">
-      <div class="col-md-12 panel">
-        <div class="panel-body">
-         <h2 class="text-center">{{ articleId ? '编辑文章' : '创作文章' }}</h2>
-          <hr>
-          <div data-validator-form>
-            <div class="form-group">
-              <input v-model.trim="title" v-validator.required="{ title: '标题' }" type="text" class="form-control" placeholder="请填写标题" @input="saveTitle">
-            </div>
-            <div class="form-group">
-              <textarea id="editor"></textarea>
-            </div>
-            <br>
-            <div class="form-group">
-              <button class="btn btn-primary" type="submit" @click="post">发 布</button>
-            </div>
-          </div>
+  <div>
+    <Message :show.sync="msgShow" :type="msgType" :msg="msg"/>
+    <el-input placeholder="请输入标题" v-model="titleValue" clearable></el-input>
+    <el-input class="margin-top-20" placeholder="请输入内容简介" v-model="contentValue" clearable></el-input>
+    <div class="z-card flex-center flex-align-center margin-top-20">
+      <div class="flex-start flex-align-center" style="height: 50px;">
+        <div class="tab_item" v-for="(item,index) in filters" :key="index" @click="tabChange(index)">
+          <div :class="['tab_style','flex-center',tabIndex == index? 'tab_select': '']">{{ item.category_name }}</div>
         </div>
       </div>
+    </div>
+    <div id="teat" class="margin-top-20"></div>
+    <div class="flex-center" style="height: 80px;">
+      <el-button id="add" type="primary">发布</el-button>
     </div>
   </div>
 </template>
 
 <script>
-import SimpleMDE from 'simplemde'
-import hljs from 'highlight.js'
-import ls from '@/utils/localStorage'
-
-window.hljs = hljs
+import {apiImgUpload,addArtice,articleType} from "@/api/home"
+import E from "wangeditor";
 
 export default {
   name: 'Create',
   data() {
     return {
-      title: '', // 文章标题
-      content: '', // 文章内容
-      articleId: undefined // 文章 ID
-    }
-  },
-  beforeRouteEnter(to, from, next) {
-    next(vm => {
-      vm.setArticleId(vm.$route.params.articleId)
-    })
-  },
-  beforeRouteLeave(to, from, next) {
-    this.clearData()
-    next()
-  },
-  watch: {
-    '$route'(to) {
-      this.clearData()
-      this.setArticleId(to.params.articleId)
+      dialogImageUrl: '',
+      dialogVisible: false,
+      msgShow: false,
+      msgType: '',
+      msg: '',
+      titleValue: '',
+      filters: [],
+      tabIndex: 0,
+      contentValue: ''
     }
   },
   mounted() {
-    const simplemde = new SimpleMDE({
-      element: document.querySelector('#editor'),
-      placeholder: '请使用 Markdown 格式书写 ;-)，代码片段黏贴时请注意使用高亮语法。',
-      spellChecker: false,
-      autoDownloadFontAwesome: false,
-      autosave: {
-        enabled: true,
-        uniqueId: 'vuejs-essential'
-      },
-      renderingConfig: {
-        codeSyntaxHighlighting: true
-      }
-    })
+    this.articleTypeList()
+    const baseUrl = localStorage.getItem('baseUrl')
+    const editor = new E('#teat')
+    // 设置编辑区域高度为 500px
+    editor.config.height = 600
+    // 注意，先配置 height ，再执行 create()
+    editor.create()
+    editor.config.customUploadImg = (resultFiles, insertImgFn) => {
+      // resultFiles 是 input 中选中的文件列表
+      // insertImgFn 是获取图片 url 后，插入到编辑器的方法
+      // 上传图片，返回结果，将图片插入到编辑器中
+      let data = new FormData()
+      data.append('upload_file',resultFiles[0])
+      apiImgUpload(data)
+        .then(res => {
+          if (res.code == 200) {
+            let imgUrl = 'http://' + res.image_url
+            insertImgFn(imgUrl)
+          } else {
+            this.msg = res.message
+            this.msgShow = true
+            this.msgType = 'warging'
+          }
+          
+        })
+    }
+    let addSubmit = document.getElementById('add')
+    addSubmit.onclick = () => {
+      let content = editor.txt.html()
+      let id = this.filters[this.tabIndex].category_id
+      let data = new FormData()
+      data.append('article_title',this.titleValue)
+      data.append('article_excerpt',this.contentValue)
+      data.append('article_category',id)
+      data.append('article_body',content)
 
-    simplemde.codemirror.on('change', () => {
-      this.content = simplemde.value()
-    })
+      addArtice(data)
+        .then(res => {
+          console.log(res)
+          if (res.code == 200) {
+            this.msg = res.message
+            this.msgShow = true
+            this.msgType = 'success'
+          } else {
+            this.msg = res.message
+            this.msgShow = true
+            this.msgType = 'wraning'
+          }
+        })
+        .catch(err => {
+          this.msg = err
+          this.msgShow = true
+          this.msgType = 'wraning'
+        })
 
-    this.simplemde = simplemde
+    }
   },
   methods: {
-    saveTitle() {
-      ls.setItem('smde_title', this.title)
+    tabChange(index) {
+      this.tabIndex = index
     },
-    fillContent(articleId) {
-      const simplemde = this.simplemde
-      const smde_title = ls.getItem('smde_title')
-
-      if (articleId !== undefined) {
-        const article = this.$store.getters.getArticleById(articleId)
-
-        if (article) {
-          const { title, content } = article
-
-          this.title = smde_title || title
-          this.content = simplemde.value() || content
-          simplemde.value(this.content)
-        }
-      } else {
-        this.title = smde_title
-        this.content = simplemde.value()
-      }
+    articleTypeList() {
+      articleType()
+        .then(res => {
+          if (res.code == 200) {
+            this.filters = res.data
+          }
+        })
     },
-    post() {
-      const title = this.title
-      const content = this.content
-
-      if (title !== '' && content.trim() !== '') {
-        const article = {
-          title,
-          content
-        }
-
-        this.$store.dispatch('post', { article, articleId: this.articleId })
-        this.clearData()
-      }
-    },
-    clearData() {
-      this.title = ''
-      ls.removeItem('smde_title')
-      this.simplemde.value('')
-      this.simplemde.clearAutosavedValue()
-    },
-    setArticleId(articleId) {
-      const localArticleId = ls.getItem('articleId')
-
-      if (articleId !== undefined && !(articleId === localArticleId)) {
-        this.clearData()
-      }
-
-      this.articleId = articleId
-      this.fillContent(articleId)
-      ls.setItem('articleId', articleId)
-    }
   }
 }
 </script>
 
 <style scoped>
-.blog-container { max-width: 980px; margin: 0 auto; margin-top: 20px;}
-textarea { height: 200px; }
+.tab_style {
+  font-size: 16px;
+  color: #000000;
+  
+}
+.tab_item {
+  width: 80px;
+  height: 40px;
+  margin-right: 20px;
+  line-height: 40px;
+  border-radius: 4px;
+}
+.tab_select {
+  font-size: 18px;
+  color: #fbbd08;
+  border-bottom: 2px solid #fbbd08;
+}
 </style>

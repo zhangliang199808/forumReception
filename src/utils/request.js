@@ -4,7 +4,7 @@ import axios from 'axios';
 const service = axios.create({
     timeout: 6000
 });
-
+localStorage.setItem('baseUrl','http://47.101.206.36:9000')
 const token = localStorage.getItem('token')
 service.interceptors.request.use(
     config => {
