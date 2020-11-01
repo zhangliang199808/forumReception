@@ -10,6 +10,12 @@ export default [
     alias: '/topics',
     component: () => import('@/views/Home')
   },
+  {
+    path: '/detail',
+    name: 'Home',
+    alias: '/topics',
+    component: () => import('@/views/articles/detail')
+  },
   // {
   //   path: '*',
   //   redirect: '/'

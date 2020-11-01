@@ -10,18 +10,26 @@
     </div>
     <div class="z-card margin-top-20">
       <div class="padding-lr-20">
-        <div v-for="(item,index) in 10" :key="index" class="art_box flex-start flex-align-center">
+        <div v-for="(item,index) in articleList" :key="index" class="art_box flex-start flex-align-center" @click="goDetail(item)">
           <div class="art_left">
             <img class="img-size" src="../assets/login.jpeg" alt="">
           </div>
-          <div class="art_right">我是标题</div>
+          <div class="art_right flex-between flex-align-center flex-1">
+            <div>{{item.article_title}}</div>
+            <div class="flex-start flex-between flex-align-end" style="width: 200px; height: 50px;">
+              <div class="art_font">{{item.article_created_time}}</div>
+              <div class="art_font"><i class="el-icon-view"></i>  {{item.article_views}}</div>
+            </div>
+          </div>
         </div>
       </div>
       <div class="margin-top-20 flex-end" style="height: 60px;">
         <el-pagination
         background
         layout="prev, pager, next"
-        :total="1000">
+        :total="totalPage"
+        @current-change="pageChange"
+        >
         </el-pagination>
       </div>
       
@@ -44,7 +52,7 @@ export default {
       msg: '',
       msgType: '',
       msgShow: false,
-      articles: [],
+      articleList: [],
       filter: 'default',
       filters: [
         { filter: 'default', category_name: '活跃', title: '最后回复排序'},
@@ -57,7 +65,8 @@ export default {
       total: 0, // 文章总数
       pageSize: 20, // 每页条数
       articlesArr: [],
-      currentPage: []
+      currentPage: [],
+      totalPage: 0
     }
   },
   computed: {
@@ -80,14 +89,24 @@ export default {
     this.articleTypeList()
   },
   methods: {
+    pageChange(e) {
+      console.log(e,'canshu')
+      let id = this.filters[this.tabIndex].category_id
+      this.homeInit(id,e)
+    },
+    goDetail(item) {
+      this.$router.push({path: '/detail?id=' + item.article_id})
+    },
     tabChange(index) {
       this.tabIndex = index
+      let id = this.filters[this.tabIndex].category_id
+      this.homeInit(id,1)
     },
     articleTypeList() {
       articleType()
         .then(res => {
           if (res.code == 200) {
-            // this.filters = res.data
+            this.filters = res.data
           }
           this.homeInit(1)
         })
@@ -98,7 +117,10 @@ export default {
       data.page_num = page || 1
       getArticleTypeList(data)
         .then(res => {
-          console.log(res)
+          if (res.code == 200) {
+            this.articleList = res.data
+            this.totalPage = res.total_page
+          }
         })
     },
     showMsg(msg, type = 'success') {
@@ -144,5 +166,10 @@ export default {
   font-size: 20px;
   font-weight: 700;
   margin-left: 20px;
+}
+.art_font {
+  font-size: 14px;
+  color: #cccccc;
+  font-weight: 400;
 }
 </style>
