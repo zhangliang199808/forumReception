@@ -50,7 +50,6 @@ export default {
         data.append('password',this.password)
           getLogin(data)
             .then(res => {
-              console.log(res)
               if (res.code == 200) {
                 localStorage.setItem('token',res.token)
                 let userInfo = {username:res.username}
