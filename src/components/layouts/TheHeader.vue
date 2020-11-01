@@ -10,11 +10,10 @@
         </button>
 
         <router-link to="/" class="navbar-brand">
-          <span class="title">{{ logo.title }}</span>
-          <img :src="logo.src" :alt="logo.title">
+          <span class="title">美恒科技</span>
+          <img src="../../assets/login.jpeg" alt="美恒科技">
         </router-link>
       </div>
-
       <div id="top-navbar-collapse" :class="['collapse', 'navbar-collapse', { in: showCollapsedNav }]">
         <ul class="nav navbar-nav">
           <li v-for="(item, index) in navList" :class="{ active: index === activeNavIndex }">

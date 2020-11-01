@@ -18,7 +18,7 @@ export default {
   name: 'SearchInput',
   data() {
     return {
-      searchValue: '' // 搜索值
+      // searchValue: '' // 搜索值
     }
   },
   computed: {

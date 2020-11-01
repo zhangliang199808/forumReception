@@ -12,7 +12,8 @@ const state = {
   auth: ls.getItem('auth'),
   articles: ls.getItem('articles'),
   searchValue: '',
-  origin: location.origin
+  origin: location.origin,
+  token: ''
   // github pages
   // origin:location.origin.indexOf('github.io') !== -1 ? `${location.origin}/vuejs-essential/dist` : location.origin
 }

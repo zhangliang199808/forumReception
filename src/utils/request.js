@@ -5,8 +5,12 @@ const service = axios.create({
     timeout: 6000
 });
 
+const token = localStorage.getItem('token')
 service.interceptors.request.use(
     config => {
+        if (token) {
+            config.headers['Authorization'] = token
+        }
         if (config.method == 'post') {
             config.headers['Content-type'] = 'application/x-www-form-urlencoded'
         }

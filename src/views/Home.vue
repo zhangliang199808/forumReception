@@ -1,53 +1,38 @@
 <template>
   <div>
-    <Message :show.sync="msgShow" :type="msgType" :msg="msg"/>
-    <div class="col-md-9 topics-index main-col">
-      <div class="panel panel-default">
-        <div class="panel-heading">
-         <ul class="list-inline topic-filter">
-            <li v-for="item in filters">
-              <router-link v-title="item.title" :class="{ active: filter === item.filter }" :to="`/topics?filter=${item.filter}`">{{ item.name }}</router-link>
-            </li>
-          </ul>
-          <div class="clearfix"></div>
-        </div>
-
-        <div class="panel-body remove-padding-horizontal">
-          <ul class="list-group row topic-list">
-            <li v-for="article in articles" :key="article.articleId" class="list-group-item">
-              <router-link :to="`/articles/${article.articleId}/content`" tag="div" class="reply_count_area hidden-xs pull-right">
-                <div class="count_set">
-                  <span class="count_of_votes" title="投票数">{{ article.likeUsers ? article.likeUsers.length : 0 }}</span>
-                  <span class="count_seperator">/</span>
-                  <span class="count_of_replies" title="回复数">{{ article.comments ? article.comments.length : 0 }}</span>
-                  <span class="count_seperator">|</span>
-                  <abbr class="timeago">{{ article.date | moment('from') }}</abbr>
-                </div>
-              </router-link>
-             <router-link :to="`/${article.uname}`" tag="div" class="avatar pull-left">
-               <img :src="article.uavatar" class="media-object img-thumbnail avatar avatar-middle">
-             </router-link>
-              <router-link :to="`/articles/${article.articleId}/content`" tag="div" class="infos">
-                <div class="media-heading">
-                  {{ article.title }}
-                </div>
-              </router-link>
-            </li>
-          </ul>
-        </div>
-        <div class="panel-footer text-right remove-padding-horizontal pager-footer">
-          <Pagination :currentPage="currentPage" :total="total" :pageSize="pageSize" :onPageChange="changePage" />
+    <!-- <Message :show.sync="msgShow" :type="msgType" :msg="msg"/> -->
+    <div class="z-card padding-lr-20">
+      <div class="flex-start flex-align-center" style="height: 50px;">
+        <div class="tab_item" v-for="(item,index) in filters" :key="index" @click="tabChange(index)">
+          <div :class="['tab_style',tabIndex == index? 'tab_select': '']">{{ item.category_name }}</div>
         </div>
       </div>
-   </div>
-   <TheSidebar/>
+    </div>
+    <div class="z-card margin-top-20">
+      <div class="padding-lr-20">
+        <div v-for="(item,index) in 10" :key="index" class="art_box flex-start flex-align-center">
+          <div class="art_left">
+            <img class="img-size" src="../assets/login.jpeg" alt="">
+          </div>
+          <div class="art_right">我是标题</div>
+        </div>
+      </div>
+      <div class="margin-top-20 flex-end" style="height: 60px;">
+        <el-pagination
+        background
+        layout="prev, pager, next"
+        :total="1000">
+        </el-pagination>
+      </div>
+      
+    </div>
   </div>
 </template>
 
 <script>
 import { mapState } from 'vuex'
 import TheSidebar from '@/components/layouts/TheSidebar'
-
+import {getArticleTypeList,articleType} from '@/api/home.js'
 export default {
   name: 'Home',
   components: {
@@ -62,46 +47,24 @@ export default {
       articles: [],
       filter: 'default',
       filters: [
-        { filter: 'default', name: '活跃', title: '最后回复排序'},
-        { filter: 'excellent', name: '精华', title: '只看加精的话题'},
-        { filter: 'vote', name: '投票', title: '点赞数排序'},
-        { filter: 'recent', name: '最近', title: '发布时间排序'},
-        { filter: 'noreply', name: '零回复', title: '无人问津的话题'}
+        { filter: 'default', category_name: '活跃', title: '最后回复排序'},
+        { filter: 'excellent', category_name: '精华', title: '只看加精的话题'},
+        { filter: 'vote', category_name: '投票', title: '点赞数排序'},
+        { filter: 'recent', category_name: '最近', title: '发布时间排序'},
+        { filter: 'noreply', category_name: '零回复', title: '无人问津的话题'}
       ],
+      tabIndex: 0,
       total: 0, // 文章总数
       pageSize: 20, // 每页条数
+      articlesArr: [],
+      currentPage: []
     }
-  },
-  beforeRouteEnter(to, from, next) {
-    const fromName = from.name
-    const logout = to.params.logout
-
-    next(vm => {
-      if (vm.$store.state.auth) {
-        switch (fromName) {
-          case 'Register':
-            vm.showMsg('注册成功')
-            break
-          case 'Login':
-            vm.showMsg('登录成功')
-            break
-        }
-      } else if (logout) {
-        vm.showMsg('操作成功')
-      }
-
-      vm.setDataByFilter(to.query.filter)
-    })
   },
   computed: {
     ...mapState([
       'auth',
       'user'
-    ]),
-    // 当前页，从查询参数 page 返回
-    currentPage() {
-      return parseInt(this.$route.query.page) || 1
-    }
+    ])
   },
   watch: {
     auth(value) {
@@ -113,25 +76,35 @@ export default {
       this.setDataByFilter(to.query.filter)
     }
   },
+  mounted() {
+    this.articleTypeList()
+  },
   methods: {
+    tabChange(index) {
+      this.tabIndex = index
+    },
+    articleTypeList() {
+      articleType()
+        .then(res => {
+          if (res.code == 200) {
+            // this.filters = res.data
+          }
+          this.homeInit(1)
+        })
+    },
+    homeInit(id,page) {
+      let data = {}
+      data.category_id = id
+      data.page_num = page || 1
+      getArticleTypeList(data)
+        .then(res => {
+          console.log(res)
+        })
+    },
     showMsg(msg, type = 'success') {
       this.msg = msg
       this.msgType = type
       this.msgShow = true
-    },
-    setDataByFilter(filter = 'default') {
-      // 每页条数
-      const pageSize = this.pageSize
-      // 当前页
-      const currentPage = this.currentPage
-      // 过滤后的所有文章
-      const allArticles = this.$store.getters.getArticlesByFilter(filter)
-
-      this.filter = filter
-      // 文章总数
-      this.total = allArticles.length
-      // 当前页的文章
-      this.articles = allArticles.slice(pageSize * (currentPage - 1), pageSize * currentPage)
     },
     // 回调，组件的当前页改变时调用
     changePage(page) {
@@ -144,5 +117,32 @@ export default {
 </script>
 
 <style scoped>
-
+.tab_style {
+  font-size: 16px;
+  color: #000000;
+  
+}
+.tab_item {
+  margin-right: 20px;
+}
+.tab_select {
+  font-size: 18px;
+  color: #fbbd08;
+  border-bottom: 2px solid #fbbd08;
+}
+.art_box {
+  height: 60px;
+  border-bottom: 1px solid #cccccc;
+}
+.art_left {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+}
+.art_right {
+  font-size: 20px;
+  font-weight: 700;
+  margin-left: 20px;
+}
 </style>

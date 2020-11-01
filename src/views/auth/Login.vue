@@ -55,6 +55,9 @@ export default {
                 let userInfo = {username:res.username}
                 localStorage.setItem('userInfo',JSON.stringify(userInfo))
                 this.$router.replace({path: '/'})
+                this.$store.commit('UPDATE_AUTH',true)
+                this.$store.commit('UPDATE_USER',userInfo)
+
               } else {
                 this.msg = res.message
                 this.msgShow = true
