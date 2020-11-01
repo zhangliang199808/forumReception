@@ -59,7 +59,7 @@ export default {
               } else {
                 this.msg = res.message
                 this.msgShow = true
-                this.msgType = 'err'
+                this.msgType = 'danger'
               }
             })
       }
