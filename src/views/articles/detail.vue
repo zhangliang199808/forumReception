@@ -43,17 +43,17 @@
       >
         <!-- 第一层 -->
         <div style="border-bottom: 1px #ccc solid; padding: 10px 0">
-          <div class="comment-title">{{ item.comment_username }}：</div>
+          <div class="comment-title">{{ item.first_comment.comment_username }}：</div>
           <div class="comment-content">
-            {{ item.comment_content }}
+            {{ item.first_comment.comment_content }}
             <a
               href="javascript:;"
-              @click="replyClick(item.comment_id)"
+              @click="replyClick(item.first_comment.comment_id)"
               class="reply"
               >回复</a
             >
           </div>
-          <div v-show="showreplytext == item.comment_id">
+          <div v-show="showreplytext == item.first_comment.comment_id">
             <el-input
               type="textarea"
               placeholder="请输入评论内容"
@@ -63,7 +63,7 @@
             >
             </el-input>
             <el-button
-              @click="sendComment(textarea1, item.comment_id)"
+              @click="sendComment(textarea1, item.first_comment.comment_id)"
               type="primary"
               class="comment-button"
               >评论</el-button
@@ -74,7 +74,7 @@
         <!-- 第二层 -->
         <div
           class="replyComment"
-          v-for="(item1, i1) in item.second_comment"
+          v-for="(item1, i1) in item.first_comment.second_comment"
           :key="i1"
         >
           <div class="comment-title">
@@ -150,7 +150,7 @@ export default {
       apiComment(data).then((res) => {
         console.log(res);
         if (res.code == 200) {
-          this.commentList = res.data[0];
+          this.commentList = res.data;
         }
       });
     },
