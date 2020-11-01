@@ -13,6 +13,10 @@
             <input v-model.trim="username" v-validator:input.required="{ regex: /^[a-zA-Z]+\w*\s?\w*$/, error: '用户名要求以字母开头的单词字符' }" type="text" class="form-control" placeholder="请填写用户名">
           </div>
           <div class="form-group">
+            <label class="control-label">手机号</label>
+            <input v-model.trim="phone" v-validator:input.required="{ regex: /^1[3|4|5|8][0-9]\d{4,8}$/, error: '请输入正确的手机号' }" type="number" class="form-control" placeholder="请填写手机号">
+          </div>
+          <div class="form-group">
             <label class="control-label">密码</label>
             <input id="password" v-model.trim="password" v-validator.required="{ regex: /^\w{6,16}$/, error: '密码要求 6 ~ 16 个单词字符' }" type="password" class="form-control" placeholder="请填写密码">
           </div>
@@ -20,13 +24,13 @@
             <label class="control-label">确认密码</label>
             <input v-model.trim="cpassword" v-validator.required="{ target: '#password' }" type="password" class="form-control" placeholder="请填写确认密码">
           </div>
-          <div class="form-group">
+          <!-- <div class="form-group">
             <label class="control-label">图片验证码</label>
             <input v-model.trim="captcha" v-validator.required="{ title: '图片验证码' }" type="text" class="form-control" placeholder="请填写验证码">
           </div>
           <div class="thumbnail" title="点击图片重新获取验证码" @click="getCaptcha">
             <div class="captcha vcenter" v-html="captchaTpl"></div>
-          </div>
+          </div> -->
           <button type="submit" class="btn btn-lg btn-success btn-block" @click="register">
             <i class="fa fa-btn fa-sign-in"></i> 注册
           </button>
@@ -39,7 +43,7 @@
 <script>
 import createCaptcha from '@/utils/createCaptcha'
 import ls from '@/utils/localStorage'
-
+import {getRegister} from '../../api/login'
 export default {
   name: 'Register',
   data() {
@@ -48,6 +52,7 @@ export default {
       username: '', // 用户名
       password: '', // 密码
       cpassword: '', // 确认密码
+      phone: '',  // 手机号
       captcha: '', // 验证码
       msg: '', // 消息
       msgType: '', // 消息类型
@@ -67,34 +72,26 @@ export default {
     register(e) {
       this.$nextTick(() => {
         const target = e.target.type === 'submit' ? e.target : e.target.parentElement
-
+        this.showMsg('验证成功，请在点击开始注册')
         if (target.canSubmit) {
           this.submit()
         }
       })
     },
     submit() {
-      if (this.captcha.toUpperCase() !== this.localCaptcha) {
-        this.showMsg('验证码不正确')
-        this.getCaptcha()
-      } else {
-        const user = {
-          name: this.username,
-          password: this.password,
-          avatar: `https://api.adorable.io/avatars/200/${this.username}.png`
-        }
-        const localUser = this.$store.state.user
-
-        if (localUser) {
-          if (localUser.name === user.name) {
-            this.showMsg('用户名已存在')
+      let data = new FormData()
+      data.append('username',this.username)
+      data.append('password',this.password)
+      data.append('mobile',this.phone)
+      data.append('password2',this.cpassword)
+      getRegister(data)
+        .then(res => {
+          if (res.code == 200) {
+            this.$router.replace({path:'/auth/login'})
           } else {
-            this.login(user)
+            this.showMsg(res.message)
           }
-        } else {
-          this.login(user)
-        }
-      }
+        })
     },
     login(user) {
       this.$store.dispatch('login', user)

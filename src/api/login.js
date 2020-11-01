@@ -9,3 +9,11 @@ export function getLogin(data) {
   })
 }
 
+// 注册接口
+export function getRegister(data) {
+  return request({
+    url: '/register/',
+    method: 'post',
+    data
+  })
+}
