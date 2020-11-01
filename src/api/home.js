@@ -41,3 +41,20 @@ export function addArtice(data) {
     data
   })
 }
+// 文文章评论查询
+export function apiComment(data) {
+  return request({
+    url: '/get/comment/',
+    method: 'get',
+    params: data
+  })
+}
+
+// 文文章评论发送
+export function abc(data) {
+  return request({
+    url: '/add/comment/',
+    method: 'post',
+     data
+  })
+}
