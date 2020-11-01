@@ -4,7 +4,6 @@ const webpack = require('webpack')
 const config = require('../config')
 const merge = require('webpack-merge')
 const path = require('path')
-var express = require('express')
 const baseWebpackConfig = require('./webpack.base.conf')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
@@ -13,33 +12,6 @@ const portfinder = require('portfinder')
 
 const HOST = process.env.HOST
 const PORT = process.env.PORT && Number(process.env.PORT)
-// var app=express();
-
-var apiServer = express()
-var bodyParser = require('body-parser')
-apiServer.use(bodyParser.urlencoded({ extended: true }))
-apiServer.use(bodyParser.json())
-var apiRouter = express.Router()
-var fs = require('fs')
-apiRouter.route('/:apiName')
-.all(function (req, res) {
-  fs.readFile('./db.json', 'utf8', function (err, data) {
-    if (err) throw err
-    var data = JSON.parse(data)
-    if (data[req.params.apiName]) {
-      res.json(data[req.params.apiName])  
-    }
-    else {
-      res.send('no such api name')
-    }
-    
-  })
-})
-apiServer.listen(3000,function(){
-  console.log('JSONserver 正在运行')
-})
-apiServer.use('/api',apiRouter)
-
 
 const devWebpackConfig = merge(baseWebpackConfig, {
   module: {
