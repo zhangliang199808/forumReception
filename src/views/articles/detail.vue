@@ -1,12 +1,10 @@
 <template>
+<div>
   <div class="z-card">
     <div class="title flex-center">
       {{ detailObj.article_title }}
     </div>
-    <div
-      class="flex-end flex-align-end"
-      style="width: 100%; height: 50px; padding-right: 40px"
-    >
+    <div class="flex-end flex-align-end" style="width: 100%; height: 50px; padding-right: 40px">
       <div class="art_font">{{ detailObj.article_create_time }}</div>
       <div class="art_font">
         <i class="el-icon-view" style="margin-left: 30px"></i>
@@ -14,106 +12,19 @@
       </div>
     </div>
     <div style="width: 100%" v-html="detailObj.article_content"></div>
-    <div class="comment">
-      <!--  -->
-      <!--  -->
-      <!-- 输入评论内容 -->
-      <div>
-        <el-input
-          type="textarea"
-          placeholder="请输入评论内容"
-          v-model="textarea"
-          maxlength="30"
-          show-word-limit
-        >
-        </el-input>
-        <el-button
-          @click="sendComment(textarea)"
-          type="primary"
-          class="comment-button"
-          >评论</el-button
-        >
-      </div>
-      <!-- 输入评论内容结束 -->
-      <!-- 评论列表 -->
-      <div
-        class="commentlsit"
-        v-for="(item, index) in commentList"
-        :key="index"
-      >
-        <!-- 第一层 -->
-        <div style="border-bottom: 1px #ccc solid; padding: 10px 0">
-          <div class="comment-title">{{ item.first_comment.comment_username }}：</div>
-          <div class="comment-content">
-            {{ item.first_comment.comment_content }}
-            <a
-              href="javascript:;"
-              @click="replyClick(item.first_comment.comment_id)"
-              class="reply"
-              >回复</a
-            >
-          </div>
-          <div v-show="showreplytext == item.first_comment.comment_id">
-            <el-input
-              type="textarea"
-              placeholder="请输入评论内容"
-              v-model="textarea1"
-              maxlength="30"
-              show-word-limit
-            >
-            </el-input>
-            <el-button
-              @click="sendComment(textarea1, item.first_comment.comment_id)"
-              type="primary"
-              class="comment-button"
-              >评论</el-button
-            >
-          </div>
-        </div>
-        <!-- 第一层结束 -->
-        <!-- 第二层 -->
-        <div
-          class="replyComment"
-          v-for="(item1, i1) in item.first_comment.second_comment"
-          :key="i1"
-        >
-          <div class="comment-title">
-            {{ item1.second_comment_username }} 评论：
-          </div>
-          <div class="comment-content">
-            {{ item1.second_comment_content }}
-            <a
-              href="javascript:;"
-              @click="replyClick(item1.second_comment_id)"
-              class="reply"
-              >回复</a
-            >
-          </div>
-          <div v-show="showreplytext == item1.second_comment_id">
-            <el-input
-              type="textarea"
-              placeholder="请输入评论内容"
-              v-model="textarea2"
-              maxlength="30"
-              show-word-limit
-            >
-            </el-input>
-            <el-button
-              @click="sendComment(textarea2, item.comment_id)"
-              type="primary"
-              class="comment-button"
-              >评论</el-button
-            >
-          </div>
-        </div>
-      </div>
-      <!-- 评论列表 结束-->
-    </div>
   </div>
+  <div class="z-card margin-top-20">
+     <comment :commentList="commentList" @doSend="sendContent" @doChidSend="twoSendContent"></comment>
+  </div>
+</div>
 </template>
 
 <script>
 import { apiDetail, apiComment, abc } from "@/api/home";
+import comment from 'hbl-comment'
+import moment from 'moment'
+import { Message } from 'element-ui';
+
 export default {
   data() {
     return {
@@ -126,12 +37,31 @@ export default {
       showreplytext: false,
     };
   },
+  components: {
+    comment
+  },
   mounted() {
     this.query = this.$route.query;
     this.getDetail();
     this.getComment();
   },
   methods: {
+    sendContent(text) {
+      let obj = {}
+      obj.id = this.commentList.length + 200
+      obj.commentUser = this.$store.state.user.username
+      obj.content = text
+      obj.createDate = moment(new Date()).format("YYYY-MM-DD hh:mm:ss")
+      this.commentList.unshift(obj)
+      this.sendComment(text)
+    },
+    twoSendContent(text,commentId,fatherId,index) {
+      console.log(text,commentId,fatherId,index,'评论ID')
+      // commentId // 被评论的id； fatherId： 父级评论的ID
+      // this.commentList.forEach((item,index) => {
+      //   if (item.first_comment.id == fatherId)
+      // })
+    },
     getDetail() {
       let data = {};
       data.article_id = this.query.id;
@@ -148,35 +78,61 @@ export default {
       let data = {};
       data.article_id = this.query.id;
       apiComment(data).then((res) => {
-        console.log(res);
         if (res.code == 200) {
-          this.commentList = res.data;
+          let list = res.data
+          list = list.map(item => {
+            let childList = item.first_comment.second_comment
+            childList = childList.map(e => {
+              return {
+                id: e.second_comment_id, // 评论id
+                commentUser: {nickName:e.second_comment_username},  // 评论用户
+                targetUser: {nickName:'admin2'},   // 被评论用户
+                content: e.second_comment_content,  // 评论内容
+                createDate: '2020-11-11', // 评论时间
+              }
+            })
+            return {
+              id: item.first_comment.comment_id, // 评论id
+              commentUser: {nickName: item.first_comment.comment_username},  // 评论用户
+              targetUser: 'admin',   // 被评论用户
+              content: item.first_comment.comment_content,  // 评论内容
+              createDate: '2020-11-02', // 评论时间
+              childrenList: childList   // 子评论列表
+            }
+          })
+          this.commentList = list;
         }
       });
     },
     // 发送评论
-    sendComment(a, b) {
-      console.log(a, b);
-      a = a ? a : "";
-      b = b ? b : "";
+    sendComment(content,twoId) {
       let data = new FormData();
-      data.append("article_id", this.query.id);
-      //   console.log(data)
-      if (b == "") {
-        data.append("comment", a);
-        // data.append("up_comment", ' ');
-        console.log(data);
-      } else {
-        data.append("comment", a);
-        data.append("up_comment", b);
-        console.log(data);
+      if (twoId) {
+        data.append("up_comment",twoId)
       }
+      data.append("article_id", this.query.id);
+      data.append("comment", content);
       abc(data).then((res) => {
         console.log(res);
         if (res.code == 200) {
-          this.getComment();
-        }
-      });
+          Message({
+            message: res.message,
+            type: 'success'
+          });
+        } else {
+          Message({
+              message: res.message || '评论失败',
+              type: 'error'
+            });
+          }
+      })
+      .catch(err => {
+        Message(
+          {
+            message: err,
+            type: 'error'
+          })
+      })
     },
     // 回复评论
     replyClick(a) {
@@ -192,27 +148,7 @@ export default {
   font-size: 30px;
   font-weight: 700;
 }
-.comment {
-  padding: 0 10px;
-}
-.comment-button {
-  margin-top: 20px;
-}
-.commentlsit {
-  padding: 20px;
-  margin: 20px 0;
-  border-top: 1px #ccc solid;
-  border-bottom: 1px #ccc solid;
-}
-.comment-title {
-  color: #ccc;
-  margin-bottom: 10px;
-}
-.replyComment {
-  margin-top: 20px;
-  margin-left: 30px;
-}
-.reply {
-  color: blue;
+/deep/ .btn {
+  line-height: 20px !important;
 }
 </style>
