@@ -13,7 +13,6 @@ service.interceptors.request.use(
         }
         if (config.method == 'post') {
             config.headers['Content-type'] = 'application/x-www-form-urlencoded'
-            console.log(123)
         }
         return config;
     },
