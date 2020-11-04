@@ -1,6 +1,6 @@
 <template>
   <div>
-    <!-- <Message :show.sync="msgShow" :type="msgType" :msg="msg"/> -->
+    <Slider :sliders="sliders"  />
     <div class="z-card padding-lr-20">
       <div class="flex-start flex-align-center" style="height: 50px;">
         <div class="tab_item" v-for="(item,index) in filters" :key="index" @click="tabChange(index)">
@@ -49,6 +49,19 @@ export default {
   },
   data() {
     return {
+      sliders: {
+        data: [
+          {
+            src: 'https://sxsimg.xiaoyuanzhao.com/D6/5A/D685908B685DA7068A50BB6A61EDB45A.png', //图片地址
+            url: 'https://www.shixiseng.com/mx2018' //链接跳转地址
+          }
+        ],//传入图片地址和链接跳转地址，必选
+        interval: 3000, //轮播动画时间，可选（默认3000ms）
+        target: '_blank', //跳转方式，可选（默认_self）
+        width:"1200px",//图片宽度，可选（默认800px）
+        height:"600px",//图片高度，可选（默认400px）
+        name: 'fade' //轮播图动画方式，可选（默认move）
+      },
       msg: '',
       msgType: '',
       msgShow: false,
